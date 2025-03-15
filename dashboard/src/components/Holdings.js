@@ -13,7 +13,7 @@ const Holdings = () => {
   // Fetch holdings data from the backend
   const fetchHoldings = async () => {
     try {
-      const res = await axios.get("https://zerodha-backend-40na.onrender.comallHoldings",{
+      const res = await axios.get("https://zerodha-backend-40na.onrender.com/allHoldings",{
         headers: {
           "Content-Type": "application/json"
         },
