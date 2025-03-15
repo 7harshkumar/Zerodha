@@ -296,13 +296,16 @@ app.post("/logout", (req, res) => {
 // GET ALL HOLDINGS
 app.get("/allHoldings", async (req, res) => {
   try {
+    console.log("Fetching all holdings...");
     let allHoldings = await HoldingModel.find({});
+    console.log("Holdings fetched:", allHoldings);
     res.status(200).json(allHoldings);
   } catch (error) {
     console.error("Error fetching holdings:", error);
-    res.status(500).json({ message: "Error fetching holdings", error });
+    res.status(500).json({ message: "Error fetching holdings", error: error.message });
   }
 });
+
 
 // GET ALL POSITIONS
 app.get("/allPositions", async (req, res) => {
