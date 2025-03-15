@@ -1,0 +1,110 @@
+/* Hero Section */
+.hero-section {
+  background-color: #537ef3; /* Deep Blue */
+  color: white;
+  padding: 60px 10%;
+}
+
+/* Container */
+.hero-container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Header */
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.track-link {
+  color: #FFD700;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.track-link:hover {
+  text-decoration: underline;
+}
+
+/* Content Section */
+.hero-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+/* Left Side */
+.hero-left {
+  flex: 1;
+  min-width: 300px;
+}
+
+.hero-left h3 {
+  font-size: 22px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #FFD700;
+  background-color: white;
+  color: black;
+  font-size: 16px;
+}
+
+/* Buttons */
+.btn-group {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 15px;
+  border: 2px solid #FFD700;
+  color: #FFD700;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background-color: #FFD700;
+  color: #1E3A8A;
+}
+
+/* Right Side */
+.hero-right {
+  flex: 1;
+  min-width: 300px;
+}
+
+.hero-right h3 {
+  font-size: 22px;
+}
+
+.hero-right ul {
+  list-style: none;
+  padding: 0;
+}
+
+.hero-right ul li {
+  margin-bottom: 10px;
+}
+
+.hero-right ul li a {
+  color: #FFD700;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.hero-right ul li a:hover {
+  text-decoration: underline;
+  color: white;
+}
