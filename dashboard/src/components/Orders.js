@@ -12,7 +12,7 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/orders", {
+      const response = await axios.get("https://zerodha-backend-40na.onrender.com/orders", {
         headers: {
           "Content-Type": "application/json",
         },

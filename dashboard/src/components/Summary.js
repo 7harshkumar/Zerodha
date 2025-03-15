@@ -1,10 +1,50 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Summary = () => {
+  const [summaryData, setSummaryData] = useState({});
+  const [holdingsCount, setHoldingsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch summary data
+    const fetchSummary = async () => {
+      try {
+        const summaryResponse = await axios.get("https://zerodha-backend-40na.onrender.com/api/summary",{
+          headers: {
+            "Content-Type": "application/json"
+          },
+          withCredentials: true // ✅ Agar backend cookies ya auth tokens bhej raha hai
+        
+        });
+        setSummaryData(summaryResponse.data);
+
+        const holdingsResponse = await axios.get("https://zerodha-backend-40na.onrender.com/allHoldings",{
+          headers: {
+            "Content-Type": "application/json"
+          },
+          withCredentials: true // ✅ Agar backend cookies ya auth tokens bhej raha hai
+        
+        });
+        setHoldingsCount(holdingsResponse.data.length);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching summary data:", error);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
       <div className="username">
-        <h6>Hi, User!</h6>
+        <h6>Hi, {summaryData.username || "User"}!</h6>
         <hr className="divider" />
       </div>
 
@@ -15,17 +55,17 @@ const Summary = () => {
 
         <div className="data">
           <div className="first">
-            <h3>3.74k</h3>
+            <h3>{summaryData.marginAvailable || 0}k</h3>
             <p>Margin available</p>
           </div>
           <hr />
 
           <div className="second">
             <p>
-              Margins used <span>0</span>{" "}
+              Margins used <span>{summaryData.marginsUsed || 0}k</span>
             </p>
             <p>
-              Opening balance <span>3.74k</span>{" "}
+              Opening balance <span>{summaryData.openingBalance || 0}k</span>
             </p>
           </div>
         </div>
@@ -34,13 +74,13 @@ const Summary = () => {
 
       <div className="section">
         <span>
-          <p>Holdings (13)</p>
+          <p>Holdings ({holdingsCount})</p>
         </span>
 
         <div className="data">
           <div className="first">
             <h3 className="profit">
-              1.55k <small>+5.20%</small>{" "}
+              {summaryData.profitLoss || 0}k <small>+{summaryData.profitPercentage || 0}%</small>
             </h3>
             <p>P&L</p>
           </div>
@@ -48,10 +88,10 @@ const Summary = () => {
 
           <div className="second">
             <p>
-              Current Value <span>31.43k</span>{" "}
+              Current Value <span>{summaryData.currentValue || 0}k</span>
             </p>
             <p>
-              Investment <span>29.88k</span>{" "}
+              Investment <span>{summaryData.investment || 0}k</span>
             </p>
           </div>
         </div>

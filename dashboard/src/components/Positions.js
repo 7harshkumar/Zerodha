@@ -7,7 +7,7 @@ const Positions = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3002/allPositions")
+      .get("https://zerodha-backend-40na.onrender.com/allPositions")
       .then((res) => setPositions(res.data))
       .catch(() => setError("Failed to fetch positions."));
   }, []);
