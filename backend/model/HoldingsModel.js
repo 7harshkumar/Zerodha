@@ -1,7 +1,6 @@
-const { model } = require("mongoose");
+const mongoose = require("mongoose");
+const HoldingsSchema = require("../schemas/HoldingsSchema"); // ✅ Import schema directly
 
-const { HoldingsSchema } = require("../schemas/HoldingsSchema");
+const HoldingsModel = mongoose.model("Holding", HoldingsSchema); // ✅ Correct Model Definition
 
-const HoldingsModel = new model("holding", HoldingsSchema);
-
-module.exports = { HoldingsModel };
+module.exports = HoldingsModel; // ✅ Correct Export
