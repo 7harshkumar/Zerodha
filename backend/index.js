@@ -9,7 +9,7 @@ const { PositionsModel } = require("./model/PositionsModel");
 const { OrdersModel } = require("./model/OrdersModel");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const bcrypt = require("bcrypt"); // For password comparison
+const bcrypt = require("bcryptjs"); // For password comparison
 const jwt = require("jsonwebtoken"); // For generating tokens
 
 const passport = require("passport");
