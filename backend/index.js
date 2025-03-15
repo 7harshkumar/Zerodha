@@ -1,221 +1,442 @@
 require("dotenv").config();
 
 const express = require("express");
+const app = express();
+const flash = require("connect-flash")
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-
-const { HoldingsModel } = require("./model/HoldingsModel");
-
+const { HoldingModel } = require("./model/HoldingsModel");
 const { PositionsModel } = require("./model/PositionsModel");
 const { OrdersModel } = require("./model/OrdersModel");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const bcrypt = require("bcrypt"); // For password comparison
+const jwt = require("jsonwebtoken"); // For generating tokens
 
-const PORT = process.env.PORT || 3002;
+const passport = require("passport");
+const localStrategy = require("passport-local");
+const User = require("./schemas/user");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+
+const PORT = process.env.PORT || 3001;
 const uri = process.env.MONGO_URL;
 
-const app = express();
+
+app.use(bodyParser.json());
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// app.use(
+//   cors({
+//       origin: ["http://localhost:5173","http://localhost:5174"],// Replace with your frontend's URL
+//       credentials: true, // Allow cookies
+//   })
+// );
+// app.use(cors());
+
+const allowedOrigins = ['https://zerodha-3-oob2.onrender.com', 'https://zerodha-dashboard-d7yn.onrender.com'];
 
 app.use(
-    cors({
-      origin: "http://localhost:3000", // Allow only frontend origin
-      methods: "GET,POST,PUT,DELETE",
-      credentials: true, // Allow cookies and auth headers
-    })
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true, // This ensures cookies are allowed
+  })
+);
+
+
+
+
+
+
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://zerodha-dashboard-d7yn.onrender.com","https://zerodha-3-oob2.onrender.com"); // Frontend origin
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
-app.use(bodyParser.json());
-
-// app.get("/addHoldings", async (req, res) => {
-//   let tempHoldings = [
-//     {
-//       name: "BHARTIARTL",
-//       qty: 2,
-//       avg: 538.05,
-//       price: 541.15,
-//       net: "+0.58%",
-//       day: "+2.99%",
-//     },
-//     {
-//       name: "HDFCBANK",
-//       qty: 2,
-//       avg: 1383.4,
-//       price: 1522.35,
-//       net: "+10.04%",
-//       day: "+0.11%",
-//     },
-//     {
-//       name: "HINDUNILVR",
-//       qty: 1,
-//       avg: 2335.85,
-//       price: 2417.4,
-//       net: "+3.49%",
-//       day: "+0.21%",
-//     },
-//     {
-//       name: "INFY",
-//       qty: 1,
-//       avg: 1350.5,
-//       price: 1555.45,
-//       net: "+15.18%",
-//       day: "-1.60%",
-//       isLoss: true,
-//     },
-//     {
-//       name: "ITC",
-//       qty: 5,
-//       avg: 202.0,
-//       price: 207.9,
-//       net: "+2.92%",
-//       day: "+0.80%",
-//     },
-//     {
-//       name: "KPITTECH",
-//       qty: 5,
-//       avg: 250.3,
-//       price: 266.45,
-//       net: "+6.45%",
-//       day: "+3.54%",
-//     },
-//     {
-//       name: "M&M",
-//       qty: 2,
-//       avg: 809.9,
-//       price: 779.8,
-//       net: "-3.72%",
-//       day: "-0.01%",
-//       isLoss: true,
-//     },
-//     {
-//       name: "RELIANCE",
-//       qty: 1,
-//       avg: 2193.7,
-//       price: 2112.4,
-//       net: "-3.71%",
-//       day: "+1.44%",
-//     },
-//     {
-//       name: "SBIN",
-//       qty: 4,
-//       avg: 324.35,
-//       price: 430.2,
-//       net: "+32.63%",
-//       day: "-0.34%",
-//       isLoss: true,
-//     },
-//     {
-//       name: "SGBMAY29",
-//       qty: 2,
-//       avg: 4727.0,
-//       price: 4719.0,
-//       net: "-0.17%",
-//       day: "+0.15%",
-//     },
-//     {
-//       name: "TATAPOWER",
-//       qty: 5,
-//       avg: 104.2,
-//       price: 124.15,
-//       net: "+19.15%",
-//       day: "-0.24%",
-//       isLoss: true,
-//     },
-//     {
-//       name: "TCS",
-//       qty: 1,
-//       avg: 3041.7,
-//       price: 3194.8,
-//       net: "+5.03%",
-//       day: "-0.25%",
-//       isLoss: true,
-//     },
-//     {
-//       name: "WIPRO",
-//       qty: 4,
-//       avg: 489.3,
-//       price: 577.75,
-//       net: "+18.08%",
-//       day: "+0.32%",
-//     },
-//   ];
-
-//   tempHoldings.forEach((item) => {
-//     let newHolding = new HoldingsModel({
-//       name: item.name,
-//       qty: item.qty,
-//       avg: item.avg,
-//       price: item.price,
-//       net: item.day,
-//       day: item.day,
-//     });
-
-//     newHolding.save();
-//   });
-//   res.send("Done!");
-// });
-
-// app.get("/addPositions", async (req, res) => {
-//   let tempPositions = [
-//     {
-//       product: "CNC",
-//       name: "EVEREADY",
-//       qty: 2,
-//       avg: 316.27,
-//       price: 312.35,
-//       net: "+0.58%",
-//       day: "-1.24%",
-//       isLoss: true,
-//     },
-//     {
-//       product: "CNC",
-//       name: "JUBLFOOD",
-//       qty: 1,
-//       avg: 3124.75,
-//       price: 3082.65,
-//       net: "+10.04%",
-//       day: "-1.35%",
-//       isLoss: true,
-//     },
-//   ];
-
-//   tempPositions.forEach((item) => {
-//     let newPosition = new PositionsModel({
-//       product: item.product,
-//       name: item.name,
-//       qty: item.qty,
-//       avg: item.avg,
-//       price: item.price,
-//       net: item.net,
-//       day: item.day,
-//       isLoss: item.isLoss,
-//     });
-
-//     newPosition.save();
-//   });
-//   res.send("Done!");
-// });
-
-app.get("/allHoldings", async (req, res) => {
-  let allHoldings = await HoldingsModel.find({});
-  res.json(allHoldings);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
 });
 
-app.get("/allPositions", async (req, res) => {
-  let allPositions = await PositionsModel.find({});
-  res.json(allPositions);
+
+const JWT_SECRET = "Mysecretecode";
+
+const sessionOptions = {
+  secret: "Mysecretecode",
+  resave: false,
+  saveUninitialized: true,
+  store: MongoStore.create({
+    mongoUrl: uri,
+    touchAfter: 24 * 3600, // Time period in seconds
+  }),
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    sameSite: "lax",
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    
+  },
+ cookie: { secure: false },
+};
+
+app.use(session(sessionOptions));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
+passport.use(User.createStrategy());
+
+//passport.use(new localStrategy(User.authenticate()));
+
+passport.use(
+  new localStrategy(
+      { usernameField: "email", passwordField: "password" }, // Use email as the username field
+      async (email, password, done) => {
+          try {
+              console.log("Email provided:", email);
+              console.log("Password provided:", password);
+
+              // Find user by email
+              const user = await User.findOne({ email });
+              if (!user) {
+                  return done(null, false, { message: "Invalid email or password" });
+              }
+
+              console.log("User from DB:", user);
+
+              // Compare password
+              if (!user.hash || !user.salt) {
+                  return done(null, false, { message: "Password not set for this account" });
+              }
+
+              const isMatch = await bcrypt.compare(password, user.hash);
+              if (!isMatch) {
+                  return done(null, false, { message: "Invalid email or password" });
+              }
+
+              return done(null, user);
+          } catch (err) {
+              return done(err);
+          }
+      }
+  )
+);
+
+ passport.serializeUser(User.serializeUser());
+ passport.deserializeUser(User.deserializeUser());
+
+// passport.serializeUser((user, done) => {
+//   console.log("Serializing user:", user); // Debug
+//   done(null, user.id);
+// });
+
+
+// passport.deserializeUser(async (id, done) => {
+//   try {
+//       const user = await User.findById(id);
+//       console.log("Deserialized user:", user); // Debug
+//       done(null, user);
+//   } catch (err) {
+//       console.error("Error during deserialization:", err);
+//       done(err, null);
+//   }
+// });
+
+app.use(flash());
+
+
+mongoose
+  .connect(uri)
+  .then(() => console.log("DB Connected!"))
+  .catch((err) => console.error("DB Connection Failed:", err));
+
+
+  app.use((req, res, next) => {
+    console.log("Session details:", req.session);
+    console.log("Authenticated user:", req.user);
+    next();
 });
 
-app.get("/orders", async (req, res) => {
+
+// SIGNUP ROUTE
+app.post("/signup", async (req, res) => {
+  try {
+      const { name, email, password } = req.body;
+
+      // Create user
+      const newUser = new User({ name, email });
+    const registeredUser=  await User.register(newUser, password);
+    console.log("Hash:", registeredUser.hash); // Check if hash is generated
+console.log("Salt:", registeredUser.salt); // Check if salt is generated
+
+    
+
+      // Manually authenticate the user after signup
+      req.login(registeredUser, (err) => {
+          if (err) {
+              console.error("Login error after signup:", err);
+              return res.status(500).json({ message: "Signup successful, but login failed" });
+          }
+
+          // Send user data to frontend
+          res.status(200).json({
+              message: "Signup successful",
+              redirectUrl:"https://zerodha-dashboard-d7yn.onrender.com",
+              user: { name: registeredUser.name, email: registeredUser.email },
+          });
+      });
+  } catch (err) {
+      console.error("Signup error:", err);
+      res.status(500).json({ message: "Signup failed", error: err.message });
+  }
+});
+
+
+
+// app.post(
+//   "/login",
+//   passport.authenticate("local", {
+//     failureRedirect: "/login",
+//     failureFlash: true,
+//   }),
+//   async (req, res) => {
+//     try {
+//       // Redirect or send a success response after successful login
+//       res.redirect("/dashboard"); // Or send a JSON response
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send("Server error");
+//     }
+//   }
+// );
+
+
+// Ensure correct path
+
+
+app.post("/login", async (req, res) => {
     try {
-      let allOrders = await OrdersModel.find({});
-      res.json(allOrders); // Send all orders as JSON response
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+        const { email, password } = req.body;
+
+        console.log("Email from request:", email);
+        console.log("Password from request:", password);
+
+        // Find user by email
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ message: "User not found!" });
+        }
+
+        // Manually verify password using Passport-Local-Mongoose method
+        user.authenticate(password, (err, authenticatedUser, passwordError) => {
+            if (err) {
+                console.error("Error during authentication:", err);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+            if (!authenticatedUser) {
+                console.log("Authentication failed:", passwordError);
+                return res.status(401).json({ message: passwordError.message || "Invalid credentials" });
+            }
+
+            console.log("User authenticated successfully:", authenticatedUser);
+            req.login(authenticatedUser, (err) => {
+                if (err) {
+                    console.error("Error during session login:", err);
+                    return res.status(500).json({ message: "Login failed" });
+                }
+
+                // Send redirect URL to frontend
+                return res.status(200).json({
+                    message: "Login successful",
+                    redirectUrl: "https://zerodha-dashboard-d7yn.onrender.com", // Redirect to dashboard folder
+                    user: { name: authenticatedUser.name, email: authenticatedUser.email }
+                });
+            });
+        });
+
+    } catch (err) {
+        console.error("Login error:", err);
+        res.status(500).json({ message: "Server error" });
     }
+});
+
+
+app.post("/logout", (req, res) => {
+  req.logout((err) => {
+      if (err) {
+          return res.status(500).json({ message: "Logout failed" });
+      }
+      req.session.destroy((err) => {
+          if (err) {
+              return res.status(500).json({ message: "Error clearing session" });
+          }
+          res.clearCookie("connect.sid"); // Session cookie delete karega
+          return res.status(200).json({ message: "Logout successful" });
+      });
   });
-  
+});
+
+
+
+
+
+
+
+// GET ALL HOLDINGS
+app.get("/allHoldings", async (req, res) => {
+  try {
+    let allHoldings = await HoldingModel.find({});
+    res.status(200).json(allHoldings);
+  } catch (error) {
+    console.error("Error fetching holdings:", error);
+    res.status(500).json({ message: "Error fetching holdings", error });
+  }
+});
+
+// GET ALL POSITIONS
+app.get("/allPositions", async (req, res) => {
+  try {
+    let allPositions = await PositionsModel.find({});
+    res.status(200).json(allPositions);
+  } catch (error) {
+    console.error("Error fetching positions:", error);
+    res.status(500).json({ message: "Error fetching positions", error });
+  }
+});
+
+// PLACE A NEW ORDER
+app.post("/newOrder", async (req, res) => {
+  try {
+    const { name, qty, price, mode } = req.body; // mode can be "BUY" or "SELL"
+
+    // Save the order in the orders collection
+    const newOrder = new OrdersModel({
+      name,
+      qty,
+      price,
+      action: mode, // BUY or SELL
+      date: new Date(),
+    });
+    await newOrder.save();
+
+    // Update holdings based on mode
+    if (mode === "BUY") {
+      // Check if the stock is already in holdings
+      const existingHolding = await HoldingModel.findOne({ name });
+      if (existingHolding) {
+        // Update existing holding
+        const totalQty = existingHolding.qty + qty;
+        const newAvgPrice =
+          (existingHolding.avg * existingHolding.qty + price * qty) / totalQty;
+        existingHolding.qty = totalQty;
+        existingHolding.avg = newAvgPrice;
+        await existingHolding.save();
+      } else {
+        // Create new holding
+        const newHolding = new HoldingModel({
+          name,
+          qty,
+          avg: price,
+        });
+        await newHolding.save();
+      }
+    } else if (mode === "SELL") {
+      const existingHolding = await HoldingModel.findOne({ name });
+      if (existingHolding) {
+        existingHolding.qty -= qty;
+        if (existingHolding.qty <= 0) {
+          // Remove the holding if quantity becomes 0
+          await HoldingModel.deleteOne({ name });
+        } else {
+          await existingHolding.save();
+        }
+      }
+    }
+
+    res.status(200).json({ message: "Order placed successfully!" });
+  } catch (error) {
+    console.error("Error placing order:", error);
+    res.status(500).json({ message: "Error placing order", error });
+  }
+});
+
+// DELETE A HOLDING
+app.delete("/deleteHolding/:id", async (req, res) => {
+  try {
+    const holdingId = req.params.id;
+    const deleted = await HoldingModel.findByIdAndDelete(holdingId);
+    if (deleted) {
+      res.status(200).json({ message: "Holding deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Holding not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting holding:", error);
+    res.status(500).json({ message: "Error deleting holding", error });
+  }
+});
+
+
+
+
+app.get("/currentUser", (req, res) => {
+
+  console.log("Session details:", req.session);
+  console.log("Authenticated user:", req.user);
+
+
+  if (req.isAuthenticated()) {
+    const { name, email } = req.user
+    res.status(200).json({ user: { name, email} });
+  } else {
+    res.status(401).json({ message: "User not authenticated" });
+  }
+});
+
+
+
+
+
+// GET ALL ORDERS
+app.get("/orders", async (req, res) => {
+  try {
+    const orders = await OrdersModel.find().sort({ date: -1 }); // Sort by latest order
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Error fetching orders", error });
+  }
+});
+
+
+
+app.get("/api/summary", (req, res) => {
+  res.json({
+    username: "Harsh",
+    marginAvailable: 3.74,
+    marginsUsed: 0,
+    openingBalance: 3.74,
+    holdingsCount: 13,
+    profitLoss: 1.55,
+    profitPercentage: 5.2,
+    currentValue: 31.43,
+    investment: 29.88,
+  });
+});
+
+
 
 app.listen(PORT, () => {
-  console.log("App started!");
-  mongoose.connect(uri);
-  console.log("DB started!");
-});
+  console.log(`Server listening on port ${PORT}`);
+});  
