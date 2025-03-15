@@ -60,13 +60,13 @@ const Login = () => {
                       {/* Logo & Heading */}
                       <div className="d-flex align-items-center mb-3 pb-1">
                         <img
-                          src="media/images/logoTradex.webp"
+                          src="media/images/logo.svg"
                           style={{ width: "12%", borderRadius: "50%" }}
-                          alt="Tradexa"
+                          alt="Zerodha"
                         />
                         &nbsp;
                         <span className="h1 fw-bold mb-0" style={{ color: "#007BFF" }}>
-                          TRADEXA
+                          ZERODHA
                         </span>
                       </div>
                       <h5 className="fw-normal mb-3 pb-3" style={{ letterSpacing: "1px" }}>
