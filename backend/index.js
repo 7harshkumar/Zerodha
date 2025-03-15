@@ -18,7 +18,7 @@ const User = require("./schemas/user");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT; // Remove the fallback port
 const uri = process.env.MONGO_URL;
 
 
