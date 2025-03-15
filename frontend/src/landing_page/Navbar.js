@@ -8,9 +8,18 @@ function Navbar() {
       style={{ backgroundColor: "#FFF", padding: "10px 20px" }}
     >
       <div className="container d-flex align-items-center justify-content-between">
-        <Link className="navbar-brand d-flex align-items-center" to="/">
-          <img src="media/images/logo.svg" style={{ width: "140px" }} alt="Logo" />
-        </Link>
+        {/* Logo Section */}
+        <div className="d-flex align-items-center">
+          <Link className="navbar-brand" to="/">
+            <img
+              src="media/images/logo.svg"
+              style={{ width: "140px" }}
+              alt="Zerodha Logo"
+            />
+          </Link>
+        </div>
+
+        {/* Navbar Toggler for Mobile View */}
         <button
           className="navbar-toggler"
           type="button"
@@ -22,11 +31,23 @@ function Navbar() {
         >
           <span className="navbar-toggler-icon"></span>
         </button>
+
+        {/* Navigation Links */}
         <div className="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
-          <ul className="navbar-nav gap-3 mb-lg-0">
+          <ul className="navbar-nav mb-lg-0">
             <li className="nav-item">
               <Link className="nav-link active" to="/signup">
                 Signup
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link active" to="/login">
+                Login
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link active text-danger" to="/logout">
+                Logout
               </Link>
             </li>
             <li className="nav-item">

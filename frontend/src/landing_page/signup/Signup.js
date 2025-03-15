@@ -1,81 +1,127 @@
 import React, { useState } from "react";
+import axios from "./axiosInstance"; // Axios instance with withCredentials: true
+import { useNavigate } from "react-router-dom";
 
-function Signup() {
-  const [mobile, setMobile] = useState("");
+const Signup = () => {
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const handleOTP = () => {
-    if (mobile.length === 10 && !isNaN(mobile)) {
-      alert(`OTP sent to ${mobile}`);
-    } else {
-      alert("Please enter a valid 10-digit mobile number.");
+  // Handle form field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null); // Clear previous errors
+
+    try {
+      // Send signup request to the backend
+      const response = await axios.post("https://zerodha-backend-40na.onrender.com/signup", formData,{
+        headers: {
+          "Content-Type": "application/json"
+        },
+        withCredentials: true // ✅ Agar backend cookies ya auth tokens bhej raha hai
+      });
+
+      if (response.status === 200) {
+        console.log("Signup successful, navigating to dashboard...");
+        if (response.data.redirectUrl) {
+          window.location.href = response.data.redirectUrl; // Redirect to external dashboard
+        } else {
+          navigate("/dashboard"); // Default redirect if no URL provided
+        }
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      if (error.response && error.response.data) {
+        setError(error.response.data.message || "Something went wrong.");
+      } else {
+        setError("Failed to connect to the server.");
+      }
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2 className="text-primary text-center">Signup Page</h2>
-      <p className="text-muted text-center">Open a free demat and trading account online.</p>
-      <div className="card p-4 shadow-sm border rounded border-light">
-        <input
-          type="text"
-          className="form-control mt-3 border-secondary"
-          placeholder="Enter your mobile number"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value)}
-        />
-        <button className="btn btn-primary mt-3 w-100 fw-bold" onClick={handleOTP}>
-          Get OTP
-        </button>
-      </div>
-      <p className="mt-3 text-center">
-        By proceeding, you agree to the <a href="#" className="text-decoration-none text-primary">Zerodha terms & privacy policy</a>
-      </p>
-      
-      <div className="container mt-5">
-        <h2 className="text-center text-dark">Explore different account types</h2>
-        <div className="row mt-4">
-          {["Individual Account", "HUF Account", "NRI Account", "Minor Account", "Corporate / LLP/ Partnership"].map((account, index) => (
-            <div className="col-md-4 mb-3" key={index}>
-              <div className="card shadow-sm p-3 border rounded border-light">
-                <h5 className="fw-bold text-info">{account}</h5>
-                <p className="text-muted">Short description of {account}.</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="container mt-5">
-        <h2 className="text-center text-dark">FAQs</h2>
-        <div className="accordion border rounded border-light p-3" id="faqAccordion">
-          {["What is a Zerodha account?", "What documents are required to open a demat account?", "Is Zerodha account opening free?", "Are there any maintenance charges for a demat account?", "Can I open a demat account without a bank account?"].map((question, index) => (
-            <div className="accordion-item border-light" key={index}>
-              <h2 className="accordion-header" id={`heading${index}`}>
-                <button
-                  className="accordion-button collapsed text-primary"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target={`#collapse${index}`}
-                  aria-expanded="false"
-                  aria-controls={`collapse${index}`}
-                >
-                  {question}
+    <section className="d-flex align-items-center justify-content-center vh-100">
+      <div className="container">
+        <div className="row d-flex align-items-center justify-content-center">
+          {/* Left Image Column */}
+          <div className="col-lg-6 col-md-8 d-none d-md-block text-center">
+            <img
+              src="https://signup.zerodha.com/assets/landing-DQ76ex-B.svg"
+              className="img-fluid"
+              alt="Phone"
+              style={{ maxWidth: "80%" }}
+            />
+          </div>
+
+          {/* Signup Form Column */}
+          <div className="col-lg-5 col-md-8">
+            <div className="card shadow p-4">
+              <h3 className="text-center mb-4">Sign Up</h3>
+              <form onSubmit={handleSubmit}>
+                {/* Name input */}
+                <div className="form-group mb-3">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+
+                {/* Email input */}
+                <div className="form-group mb-3">
+                  <label>Email address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+
+                {/* Password input */}
+                <div className="form-group mb-3">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="form-control"
+                    required
+                  />
+                </div>
+
+                {/* Remember Me */}
+                <div className="form-check mb-3">
+                  <input className="form-check-input" type="checkbox" defaultChecked />
+                  <label className="form-check-label">Remember me</label>
+                </div>
+
+                {/* Submit button */}
+                <button type="submit" className="btn btn-primary w-100">
+                  Sign up
                 </button>
-              </h2>
-              <div
-                id={`collapse${index}`}
-                className="accordion-collapse collapse"
-                aria-labelledby={`heading${index}`}
-                data-bs-parent="#faqAccordion"
-              >
-                <div className="accordion-body text-muted">Answer for {question} goes here.</div>
-              </div>
+
+                {error && <p className="text-danger mt-3">{error}</p>}
+              </form>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
-}
+};
 
 export default Signup;
