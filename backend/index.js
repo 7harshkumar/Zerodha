@@ -424,40 +424,19 @@ app.get("/orders", async (req, res) => {
 
 
 
-app.get("/api/summary", async (req, res) => {
-  try {
-    // Ensure user is authenticated
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized access" });
-    }
-
-    // Fetch user details (assuming user data is stored in MongoDB)
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Mock portfolio data (replace with actual DB queries)
-    const portfolioSummary = {
-      username: user.name, // Dynamic username
-      marginAvailable: 3.74,
-      marginsUsed: 0,
-      openingBalance: 3.74,
-      holdingsCount: 13,
-      profitLoss: 1.55,
-      profitPercentage: 5.2,
-      currentValue: 31.43,
-      investment: 29.88,
-    };
-
-    res.status(200).json(portfolioSummary);
-  } catch (error) {
-    console.error("Error fetching summary:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
-  }
+app.get("/api/summary", (req, res) => {
+  res.json({
+    username: "Harsh",
+    marginAvailable: 3.74,
+    marginsUsed: 0,
+    openingBalance: 3.74,
+    holdingsCount: 13,
+    profitLoss: 1.55,
+    profitPercentage: 5.2,
+    currentValue: 31.43,
+    investment: 29.88,
+  });
 });
-
 
 
 

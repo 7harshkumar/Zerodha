@@ -5,44 +5,41 @@ const Summary = () => {
   const [summaryData, setSummaryData] = useState({});
   const [holdingsCount, setHoldingsCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const formatNumber = (num) => {
-    if (!num) return "0";
-    return num >= 1000 ? `${(num / 1000).toFixed(1)}k` : num.toFixed(2);
-  };
 
   useEffect(() => {
+    // Fetch summary data
     const fetchSummary = async () => {
       try {
-        const token = localStorage.getItem("token"); // Ensure token is stored
+        const summaryResponse = await axios.get("https://zerodha-backend-40na.onrender.com/api/summary",{
+          headers: {
+            "Content-Type": "application/json"
+          },
+          withCredentials: true // ✅ Agar backend cookies ya auth tokens bhej raha hai
+        
+        });
+        setSummaryData(summaryResponse.data);
 
-        const [summaryRes, holdingsRes] = await Promise.all([
-          axios.get("https://zerodha-backend-40na.onrender.com/api/summary", {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
-          }),
-          axios.get("https://zerodha-backend-40na.onrender.com/allHoldings", {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
-          }),
-        ]);
+        const holdingsResponse = await axios.get("https://zerodha-backend-40na.onrender.com/allHoldings",{
+          headers: {
+            "Content-Type": "application/json"
+          },
+          withCredentials: true // ✅ Agar backend cookies ya auth tokens bhej raha hai
+        
+        });
+        setHoldingsCount(holdingsResponse.data.length);
 
-        setSummaryData(summaryRes.data);
-        setHoldingsCount(holdingsRes.data.length);
         setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load data. Please try again.");
-        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching summary data:", error);
       }
     };
 
     fetchSummary();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -58,14 +55,18 @@ const Summary = () => {
 
         <div className="data">
           <div className="first">
-            <h3>{formatNumber(summaryData.marginAvailable)}</h3>
+            <h3>{summaryData.marginAvailable || 0}k</h3>
             <p>Margin available</p>
           </div>
           <hr />
 
           <div className="second">
-            <p>Margins used <span>{formatNumber(summaryData.marginsUsed)}</span></p>
-            <p>Opening balance <span>{formatNumber(summaryData.openingBalance)}</span></p>
+            <p>
+              Margins used <span>{summaryData.marginsUsed || 0}k</span>
+            </p>
+            <p>
+              Opening balance <span>{summaryData.openingBalance || 0}k</span>
+            </p>
           </div>
         </div>
         <hr className="divider" />
@@ -79,15 +80,19 @@ const Summary = () => {
         <div className="data">
           <div className="first">
             <h3 className="profit">
-              {formatNumber(summaryData.profitLoss)} <small>+{summaryData.profitPercentage || 0}%</small>
+              {summaryData.profitLoss || 0}k <small>+{summaryData.profitPercentage || 0}%</small>
             </h3>
             <p>P&L</p>
           </div>
           <hr />
 
           <div className="second">
-            <p>Current Value <span>{formatNumber(summaryData.currentValue)}</span></p>
-            <p>Investment <span>{formatNumber(summaryData.investment)}</span></p>
+            <p>
+              Current Value <span>{summaryData.currentValue || 0}k</span>
+            </p>
+            <p>
+              Investment <span>{summaryData.investment || 0}k</span>
+            </p>
           </div>
         </div>
         <hr className="divider" />
